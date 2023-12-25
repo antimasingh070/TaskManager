@@ -4,6 +4,8 @@ Rails.application.routes.draw do
       resources :users, only: [:create, :show, :destroy, :update, :index] do
         collection do 
           get :login
+          post :reset_password
+          post :sign_up
         end
       end
 
