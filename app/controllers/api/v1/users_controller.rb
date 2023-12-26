@@ -5,38 +5,38 @@ module Api
         skip_before_action :authenticate_user!, only: :create
         before_action :authenticate_with_otp, only: [:login]
 
-        # def reset_password
-        #   method = nil
-        #   user = if params[:token].present?
-        #            method = 'Token'
-        #            User.find_by(id: JwtToken.decode(params[:token])&.dig(:user_id))
-        #          elsif (params[:phone_number].present? || params[:email].present?) && params[:code].present?
-        #            method = 'OTP'
-        #            user = find_user_by_phone_or_email(params[:phone_number], params[:email])
-        #            otp = Otp.find_by(user: user, code: params[:code])
-        #            otp&.update(used: true) if otp&.expires_at&.future?
-        #            user
-        #          else
-        #            nil
-        #          end
+        def reset_password
+          method = nil
+          user = if params[:token].present?
+                   method = 'Token'
+                   User.find_by(id: JwtToken.decode(params[:token])&.dig(:user_id))
+                 elsif (params[:phone_number].present? || params[:email].present?) && params[:code].present?
+                   method = 'OTP'
+                   user = find_user_by_phone_or_email(params[:phone_number], params[:email])
+                   otp = Otp.find_by(user: user, code: params[:code])
+                   otp&.update(used: true) if otp&.expires_at&.future?
+                   user
+                 else
+                   nil
+                 end
       
-        #   if user
-        #     password = params[:password]
-        #     if password.blank? || user.authenticate(password)
-        #       # Render an error if the new password is blank or matches the old password
-        #       render_error({ error: 'Invalid new password' }, "") and return if password.blank? || user.authenticate(password)
+          if user
+            password = params[:password]
+            if password.blank? || user.authenticate(password)
+              # Render an error if the new password is blank or matches the old password
+              render_error({ error: 'Invalid new password' }, "") and return if password.blank? || user.authenticate(password)
       
-        #       # Reset the password
-        #       user.update(password: password)
-        #       token = JwtToken.encode(user_id: user.id)
-        #       render_success(user: ::UserSerializer.new(user), token: token, message: "#{method} verified successfully and password reset")
-        #     else
-        #       render_error({ error: 'Invalid password' }, "")
-        #     end
-        #   else
-        #     render_error({ error: "Invalid #{method}" }, "")
-        #   end
-        # end
+              # Reset the password
+              user.update(password: password)
+              token = JwtToken.encode(user_id: user.id)
+              render_success(user: ::UserSerializer.new(user), token: token, message: "#{method} verified successfully and password reset")
+            else
+              render_error({ error: 'Invalid password' }, "")
+            end
+          else
+            render_error({ error: "Invalid #{method}" }, "")
+          end
+        end
 
         def sign_up
             existing_user = User.find_by(email: params[:user][:email])
